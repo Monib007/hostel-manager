@@ -1,27 +1,41 @@
 const Admin = require('../models/Admin')
+const Student = require('../models/Student')
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcryptjs');
 
 // login admin
 // POST /api/auth/login
-exports.loginAdmin = async (req, res) => {
-    const {username, password} = req.body;
+exports.loginUser = async (req, res) => {
+    const {username, password, role} = req.body;
+
+    if(!username || !password || !role) {
+        return res.status(400).json({message : 'Username, password and role are required'})
+    }
 
     try {
-        //check if admin exists
-        const admin = await Admin.findOne({username});
-        if(!admin) { 
-            return res.status(401).json({message: 'Invalid username or password'});
+        let user;
+
+        if(role === 'admin'){
+            user = await Admin.findOne({username})
+        } else if(role  === 'student'){
+            user = await Student.findOne({username})
+        } else {
+            return res.status(400).json({message: 'Invalid user'})
         }
+
+        if(!user){
+            return res.status(401).json({ message: 'Invalid username or password' })
+        }
+
         //verify password
-        const isMatch = await bcrypt.compare(password, admin.password);
+        const isMatch = await bcrypt.compare(password, user.password);
         if(!isMatch) {
             return res.status(401).json({message: 'Invalid username or password'})
         }
 
         //generate JWT token
         const token = jwt.sign(
-            {id: admin._id, role: admin.role},
+            {id: user._id, role: user.role},
             process.env.JWT_SECRET,
             {expiresIn: '1d'}
         );
@@ -29,9 +43,9 @@ exports.loginAdmin = async (req, res) => {
         res.status(200).json({
             token,
             user: {
-                id: admin._id,
-                username: admin.username,
-                role: admin.role,
+                id: user._id,
+                username: user.username,
+                role: user.role,
             },
         });
     

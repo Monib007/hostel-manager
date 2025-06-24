@@ -5,7 +5,7 @@ const StudentSchema = new mongoose.Schema({
     username: {type: String, required: true, unique: true},
     password: {type: String, required: true},
     roomNumber:{type: String},
-    role: {type: String},
+    role: {type: String, default: 'student'},
 })
 
 StudentSchema.pre('save', async function (next) {
