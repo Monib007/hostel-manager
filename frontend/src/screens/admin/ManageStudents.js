@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import {useNavigate} from 'react-router-dom'
+
 
 const ManageStudents = () => {
   const [username, setUsername] = useState("");
@@ -7,10 +9,15 @@ const ManageStudents = () => {
   const [roomNumber, setRoomNumber] = useState("");
   const [students, setStudents] = useState([]);
   const [editingId, setEditingId] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  // const [selectedStudent, setSelectedStudent] = useState(null);
+  // const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  const navigate = useNavigate();
 
   const fetchStudents = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/students");
+      const res = await axios.get("http://localhost:5000/api/admin/students");
       setStudents(res.data);
     } catch (err) {
       console.error("Error fetching students", err);
@@ -24,7 +31,7 @@ const ManageStudents = () => {
     if (!window.confirm("Are you sure you want to remove thi student?")) return;
 
     try {
-      await axios.delete(`http://localhost:5000/api/students/${id}`);
+      await axios.delete(`http://localhost:5000/api/admin/students/${id}`);
       alert("Student deleted");
       fetchStudents();
     } catch (err) {
@@ -37,7 +44,7 @@ const ManageStudents = () => {
     e.preventDefault();
     try {
       if (editingId) {
-        await axios.put(`http://localhost:5000/api/students/${editingId}`, {
+        await axios.put(`http://localhost:5000/api/admin/students/${editingId}`, {
           username,
           password,
           roomNumber,
@@ -45,7 +52,7 @@ const ManageStudents = () => {
         alert("Student updated successfully");
       } else {
         const response = await axios.post(
-          "http://localhost:5000/api/students",
+          "http://localhost:5000/api/admin/students",
           {
             username,
             password,
@@ -72,6 +79,11 @@ const ManageStudents = () => {
     setRoomNumber(student.roomNumber);
     setEditingId(student._id);
   };
+
+  // const handleView = (student) => {
+  //   setSelectedStudent(student);
+  //   setIsModalOpen(true);
+  // };
 
   return (
     <div>
@@ -101,12 +113,24 @@ const ManageStudents = () => {
           required
         />
         <br />
-        <button type="submit">{editingId ? 'Update Student':'Create Student'}</button>
+        <button type="submit">
+          {editingId ? "Update Student" : "Create Student"}
+        </button>
       </form>
 
       <hr />
 
       <h3>Student List</h3>
+
+      <div>
+        <input
+          type="text"
+          placeholder="Search by username or room"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
+
       <table border="1" cellPadding="10">
         <thead>
           <tr>
@@ -115,20 +139,34 @@ const ManageStudents = () => {
           </tr>
         </thead>
         <tbody>
-          {students.map((student) => (
-            <tr key={student._id}>
-              <td>{student.username}</td>
-              <td>{student.roomNumber}</td>
-              <td>
-                <button onClick={() => handleEdit(student)}>Edit</button>
-              </td>
-              <td>
-                <button onClick={() => handleDelete(student._id)}>
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
+          {students
+            .filter(
+              (student) =>
+                student.username
+                  .toLowerCase()
+                  .includes(searchTerm.toLowerCase()) ||
+                student.roomNumber
+                  .toLowerCase()
+                  .includes(searchTerm.toLowerCase())
+            )
+
+            .map((student) => (
+              <tr key={student._id}>
+                <td>{student.username}</td>
+                <td>{student.roomNumber}</td>
+                <td>
+                  <button onClick={() => navigate(`/admin/students/${student._id}`)}>View</button>
+                </td>
+                <td>
+                  <button onClick={() => handleEdit(student)}>Edit</button>
+                </td>
+                <td>
+                  <button onClick={() => handleDelete(student._id)}>
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
         </tbody>
       </table>
     </div>

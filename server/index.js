@@ -4,7 +4,7 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 
 const authRoutes = require('./routes/auth');
-const studentRoutes = require('./routes/studentRoutes')
+const adminStudentRoutes = require('./routes/adminStudentRoutes')
 
 dotenv.config();
 connectDB();
@@ -24,7 +24,7 @@ app.get('/', (req, res) => {
 
 
 app.use('/api/auth', authRoutes);
-app.use('/api/students', studentRoutes);
+app.use('/api/admin/students', adminStudentRoutes);
 
 // Start Server
 const PORT = process.env.PORT || 5000;
